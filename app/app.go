@@ -1,6 +1,12 @@
 package app
 
 import (
+
+    encryptionmodule "github.com/CentralBlockchainEntertainment/Central-Blockchain/x/encryption"
+    encryptionkeeper "github.com/CentralBlockchainEntertainment/Central-Blockchain/x/encryption/keeper"
+    encryptiontypes "github.com/CentralBlockchainEntertainment/Central-Blockchain/x/encryption/types"
+
+
 	"context"
 	"fmt"
 	"io"
@@ -476,7 +482,24 @@ func NewOsmosisApp(
 	//
 	// Any time a module requires a keeper de-ref'd that's not its native one,
 	// its code-smell and should probably change. We should get the staking keeper dependencies fixed.
-	app.mm = module.NewManager(appModules(app, encodingConfig, skipGenesisInvariants)...)
+	app.mm = 
+// Define store key for encryption
+app.keys[encryptiontypes.StoreKey] = sdk.NewKVStoreKey(encryptiontypes.StoreKey)
+
+// Initialize the encryption keeper
+encryptionKeeper := encryptionkeeper.NewKeeper(
+    app.keys[encryptiontypes.StoreKey],
+    appCodec,
+)
+
+app.encryptionKeeper = encryptionKeeper
+
+// Add encryption module to the Module Manager
+app.mm = module.NewManager(
+    // other modules...
+    encryptionmodule.NewAppModule(encryptionKeeper),
+)
+appModules(app, encodingConfig, skipGenesisInvariants)...)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
